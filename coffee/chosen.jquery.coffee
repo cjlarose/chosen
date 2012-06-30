@@ -29,26 +29,25 @@ class Chosen extends AbstractChosen
     @container_id = if @form_field.id.length then @form_field.id.replace(/[^\w]/g, '_') else this.generate_field_id()
     @container_id += "_chzn"
 
-    @f_width = @form_field_jq.outerWidth()
+    @f_width = @form_field_jq.outerWidth() || 400
 
-    container_div = ($ "<div />", {
+    @container = ($ "<div />", {
       id: @container_id
       class: "chzn-container#{ if @is_rtl then ' chzn-rtl' else '' }"
       style: 'width: ' + (@f_width) + 'px;' #use parens around @f_width so coffeescript doesn't think + ' px' is a function parameter
     })
 
     if @is_multiple
-      container_div.html '<ul class="chzn-choices"><li class="search-field"><input type="text" value="' + @default_text + '" class="default" autocomplete="off" style="width:25px;" /></li></ul><div class="chzn-drop" style="left:-9000px;"><ul class="chzn-results"></ul></div>'
+      @container.html '<ul class="chzn-choices"><li class="search-field"><input type="text" value="' + @default_text + '" class="default" autocomplete="off" style="width:25px;" /></li></ul><div class="chzn-drop" style="left:-9000px;"><ul class="chzn-results"></ul></div>'
     else
-      container_div.html '<a href="javascript:void(0)" class="chzn-single chzn-default"><span>' + @default_text + '</span><div><b></b></div></a><div class="chzn-drop" style="left:-9000px;"><div class="chzn-search"><input type="text" autocomplete="off" /></div><ul class="chzn-results"></ul></div>'
+      @container.html '<a href="javascript:void(0)" class="chzn-single chzn-default"><span>' + @default_text + '</span><div><b></b></div></a><div class="chzn-drop" style="left:-9000px;"><div class="chzn-search"><input type="text" autocomplete="off" /></div><ul class="chzn-results"></ul></div>'
 
-    @form_field_jq.hide().after container_div
-    @container = ($ '#' + @container_id)
+    @form_field_jq.hide().after @container
     @container.addClass( "chzn-container-" + (if @is_multiple then "multi" else "single") )
     @dropdown = @container.find('div.chzn-drop').first()
 
     dd_top = @container.height()
-    dd_width = (@f_width - get_side_border_padding(@dropdown))
+    dd_width = (@f_width - (get_side_border_padding(@dropdown) || 2))
 
     @dropdown.css({"width": dd_width  + "px", "top": dd_top + "px"})
 
@@ -64,7 +63,7 @@ class Chosen extends AbstractChosen
     else
       @search_container = @container.find('div.chzn-search').first()
       @selected_item = @container.find('.chzn-single').first()
-      sf_width = dd_width - get_side_border_padding(@search_container) - get_side_border_padding(@search_field)
+      sf_width = dd_width - (get_side_border_padding(@search_container) || 8) - (get_side_border_padding(@search_field) || 27)
       @search_field.css( {"width" : sf_width + "px"} )
 
     this.results_build()
@@ -159,7 +158,7 @@ class Chosen extends AbstractChosen
 
 
   test_active_click: (evt) ->
-    if $(evt.target).parents('#' + @container_id).length
+    if $(evt.target).parents(@container).length
       @active_field = true
     else
       this.close_field()
@@ -300,7 +299,7 @@ class Chosen extends AbstractChosen
     choice_id = @container_id + "_c_" + item.array_index
     @choices += 1
     @search_container.before  '<li class="search-choice" id="' + choice_id + '"><span>' + item.html + '</span><a href="javascript:void(0)" class="search-choice-close" rel="' + item.array_index + '"></a></li>'
-    link = $('#' + choice_id).find("a").first()
+    link = $(@serach_container.prev).find("a").first()
     link.click (evt) => this.choice_destroy_link_click(evt)
 
   choice_destroy_link_click: (evt) ->
